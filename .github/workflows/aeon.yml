@@ -1,0 +1,30 @@
+name: AEON Build & Audit
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install optional PDF deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install reportlab || true
+
+      - name: Init + Seal + Build + Audit
+        run: |
+          python codex/aeon_cli.py --aeon VAULT_BRIDGE.json init
+          python codex/aeon_cli.py --aeon VAULT_BRIDGE.json seal "CI: build on $GITHUB_SHA"
+          python codex/aeon_cli.py --aeon VAULT_BRIDGE.json build
+          python codex/aeon_cli.py --aeon VAULT_BRIDGE.json audit
